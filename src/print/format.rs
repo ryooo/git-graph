@@ -79,6 +79,7 @@ pub fn format_commit(
     commit: &Commit,
     branches: String,
     wrapping: &Option<Options>,
+    cull_color: Option<u8>,
     hash_color: Option<u8>,
 ) -> Result<Vec<String>, String> {
     let mut replacements = vec![];
@@ -258,7 +259,12 @@ pub fn format_commit(
                             MODE_PLUS => add_line(&mut lines, &mut out, wrapping),
                             _ => {}
                         }
-                        write!(out, "{}", format_date(commit.author().when(), "%F"))
+                        if let Some(color) = cull_color {
+                            write!(out, "{} {}", Paint::fixed(color, "◆"), format_date(commit.author().when(), "%Y年%m月"))
+                        } else {
+                            write!(out, "{}", format_date(commit.author().when(), "%Y年%m月"))
+                        }
+
                     }
                     COMMITTER => {
                         match mode {
@@ -294,7 +300,11 @@ pub fn format_commit(
                             MODE_PLUS => add_line(&mut lines, &mut out, wrapping),
                             _ => {}
                         }
-                        write!(out, "{}", format_date(commit.committer().when(), "%F"))
+                        if let Some(color) = cull_color {
+                            write!(out, "{} {}", Paint::fixed(color, "◆"), format_date(commit.committer().when(), "%Y年%m月"))
+                        } else {
+                            write!(out, "{}", format_date(commit.committer().when(), "%Y年%m月"))
+                        }
                     }
                     BODY => {
                         let message = commit
@@ -416,12 +426,13 @@ pub fn format(
     branches: String,
     wrapping: &Option<Options>,
     hash_color: Option<u8>,
+    cull_color: Option<u8>,
     format: &CommitFormat,
 ) -> Result<Vec<String>, String> {
     match format {
         CommitFormat::OneLine => return Ok(format_oneline(commit, branches, wrapping, hash_color)),
         CommitFormat::Format(format) => {
-            return format_commit(format, commit, branches, wrapping, hash_color)
+            return format_commit(format, commit, branches, wrapping, cull_color, hash_color)
         }
         _ => {}
     }

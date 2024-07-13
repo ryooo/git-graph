@@ -552,11 +552,11 @@ fn format(
         .find_commit(info.oid)
         .map_err(|err| err.message().to_string())?;
 
-    let branch_str = format_branches(graph, info, head, color);
+    let (branch_str, cull_color) = format_branches(graph, info, head, color);
 
     let hash_color = if color { Some(HASH_COLOR) } else { None };
 
-    crate::print::format::format(&commit, branch_str, wrapping, hash_color, format)
+    crate::print::format::format(&commit, branch_str, wrapping, hash_color, cull_color, format)
 }
 
 /// Format branches and tags.
@@ -565,7 +565,7 @@ pub fn format_branches(
     info: &CommitInfo,
     head: Option<&HeadInfo>,
     color: bool,
-) -> String {
+) -> (String, Option<u8>) {
     let curr_color = info
         .branch_trace
         .map(|branch_idx| &graph.all_branches[branch_idx].visual.term_color);
@@ -644,7 +644,7 @@ pub fn format_branches(
         write!(branch_str, "]").unwrap();
     }
 
-    branch_str
+    (branch_str, curr_color.copied())
 }
 
 /// Occupied row ranges
